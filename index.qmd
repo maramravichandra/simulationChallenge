@@ -85,15 +85,102 @@ investmentDAG.show()
 
 ### 1) Expected Value After 1 Flip
 
-TODO: Explain whether the expected value of your account balance after one flip is >, =, or < $30,000. What is the gain in expected value as a percentage of your buy-in? Does this simple analysis suggest you should buy-in to the game?
+**Explain whether the expected value of your account balance after one flip is >, =, or < $30,000. What is the gain in expected value as a percentage of your buy-in? Does this simple analysis suggest you should buy-in to the game?**
+
+
+The expected value (EV) of the account balance after one flip is **greater than** the initial $30,000 investment. We can calculate this by taking the weighted average of the two possible outcomes:
+
+1.  **Heads (50% chance):** Balance becomes $30,000 * 1.50 = $45,000.
+2.  **Tails (50% chance):** Balance becomes $30,000 * 0.60 = $18,000.
+
+The expected value is `(0.5 * $45,000) + (0.5 * $18,000) = $31,500`.
+
+This represents an expected gain of **$1,500**, or **5%** of the initial buy-in. The waterfall chart below visualizes how we arrive at this expected value. It starts with the initial balance and shows the weighted "pull" of the potential loss and the weighted "push" of the potential gain. Because the weighted gain is larger than the weighted loss, the final expected value is positive. Based on this simple, single-flip analysis, the positive expected return suggests that one **should** buy into the game.
 
 ```{python}
 #| label: q1-expected-value-py
-#| echo: true
+#| echo: false
+#| fig-cap: "Comparison of initial balance, possible outcomes, and expected value after one flip."
 
-# TODO: Compute EV after one flip in Python
-# - Show calculation and brief explanation
+# --- Parameters ---
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
+import plotly.graph_objects as go
 
+initial_balance = 30000
+p_heads = 0.5
+p_tails = 0.5
+heads_multiplier = 1.50
+tails_multiplier = 0.60
+
+# --- Calculate Outcomes and Expected Value ---
+outcome_heads = initial_balance * heads_multiplier
+outcome_tails = initial_balance * tails_multiplier
+ev = (p_heads * outcome_heads) + (p_tails * outcome_tails)
+expected_gain = ev - initial_balance
+percent_gain = (expected_gain / initial_balance) * 100
+
+# --- Create "Forking Paths" Visualization ---
+fig, ax = plt.subplots(figsize=(9, 7))
+
+# Positions for the points
+x_coords = [0, 1, 1, 0.5]
+y_coords = [initial_balance, outcome_heads, outcome_tails, ev]
+labels = ['Initial', 'Heads', 'Tails', 'Expected\nValue']
+colors = ['grey', 'green', 'red', 'blue']
+
+# Draw lines from initial to outcomes
+ax.plot([x_coords[0], x_coords[1]], [y_coords[0], y_coords[1]], 'g--', alpha=0.7)
+ax.plot([x_coords[0], x_coords[2]], [y_coords[0], y_coords[2]], 'r--', alpha=0.7)
+
+# Plot points
+ax.scatter(x_coords, y_coords, c=colors, s=200, zorder=5)
+
+# Add annotations for each point
+for i, label in enumerate(labels):
+    ha = 'right' if i == 0 else 'left'
+    x_offset = -0.03 if i == 0 else 0.03
+    
+    if label == 'Heads':
+        text = f"Heads (+50%)\n${y_coords[i]:,.0f}"
+    elif label == 'Tails':
+        text = f"Tails (-40%)\n${y_coords[i]:,.0f}"
+    elif label == 'Initial':
+        text = f"Initial\nBalance\n${y_coords[i]:,.0f}"
+    else: # Expected Value
+        text = f"Expected Value (+5%)\n${y_coords[i]:,.0f}"
+        # ha = 'center'
+        # x_offset = 0.18
+        
+    ax.text(x_coords[i] + x_offset, y_coords[i], text, va='center', ha=ha, fontsize=11, fontweight='bold')
+
+# --- Add rotated probability labels on the lines ---
+# Calculate angle for the lines
+x_start, y_start = x_coords[0], y_coords[0]
+x_end_heads, y_end_heads = x_coords[1], y_coords[1]
+x_end_tails, y_end_tails = x_coords[2], y_coords[2]
+
+# Get angle in degrees
+angle_heads = np.rad2deg(np.arctan2(y_end_heads - y_start, x_end_heads - x_start))
+angle_tails = np.rad2deg(np.arctan2(y_end_tails - y_start, x_end_tails - x_start))
+
+ax.text(0.6, (initial_balance + outcome_heads) / 2, '50% Prob.', ha='center', va='center', color='green', fontsize=10, rotation=angle_heads, rotation_mode='anchor', transform_rotates_text=True)
+ax.text(0.6, (initial_balance + outcome_tails) / 2, '50% Prob.', ha='center', va='center', color='red', fontsize=10, rotation=angle_tails, rotation_mode='anchor', transform_rotates_text=True)
+
+# Formatting
+ax.set_title('Possible Outcomes and Expected Value After One Flip', fontsize=16, pad=20)
+ax.set_ylabel('Account Balance ($)', fontsize=12)
+ax.set_xlim(-0.5, 1.5)
+ax.get_xaxis().set_visible(False) # Hide x-axis, it's just for layout
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['bottom'].set_visible(False)
+ax.spines['left'].set_position(('outward', 10))
+ax.yaxis.set_major_formatter(FuncFormatter(lambda x, p: f'${x:,.0f}'))
+ax.grid(axis='y', linestyle=':', color='grey')
+
+fig.show()
 ```
 
 ### 2) Single Simulation Over Time (Narrative + Plot)
@@ -102,12 +189,43 @@ Briefly narrate and visualize what happens to your account balance over the cour
 
 ```{python}
 #| label: q2-single-sim-py
-#| echo: true
+#| echo: false
 #| fig-cap: "Single simulation path of account balance"
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 
-# TODO: Simulate one path from $30,000 over N periods
-# - Make a matplotlib (OO) time-series
-# - Set seed for reproducibility
+# --- Parameters ---
+INITIAL_BALANCE = 30000
+NUM_YEARS = 50  # From age 25 to 75
+START_AGE = 25
+HEADS_MULT = 1.50
+TAILS_MULT = 0.60
+np.random.seed(42)  # Set seed for reproducibility
+
+# --- Simulate One Path ---
+ages = np.arange(START_AGE, START_AGE + NUM_YEARS + 1)
+balance_path = np.zeros(NUM_YEARS + 1)
+balance_path[0] = INITIAL_BALANCE
+
+for i in range(1, NUM_YEARS + 1):
+    outcome = np.random.choice([HEADS_MULT, TAILS_MULT])
+    balance_path[i] = balance_path[i-1] * outcome
+
+# --- Plot the Time Series ---
+fig, ax = plt.subplots(figsize=(9, 6))
+ax.plot(ages, balance_path, marker='o', linestyle='-', markersize=4)
+ax.axhline(INITIAL_BALANCE, color='red', linestyle='--', linewidth=2, label=f'Initial Investment (${INITIAL_BALANCE:,.0f})')
+
+# Formatting
+ax.set_title('A Single Investment Journey (Age 25 to 75)')
+ax.set_xlabel('Age')
+ax.set_ylabel('Account Balance ($)')
+ax.set_yscale('log') # Use log scale to better see fluctuations at lower values
+ax.yaxis.set_major_formatter(FuncFormatter(lambda x, p: f'${x:,.0f}'))
+ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+ax.legend()
+plt.show()
 
 ```
 
@@ -117,12 +235,105 @@ TODO: Visually and narratively describe the distribution of your account balance
 
 ```{python}
 #| label: q3-dist-100-py
-#| echo: true
+#| echo: false
 #| fig-cap: "Distribution of final balances across 100 simulations"
 
-# TODO: Run 100 simulations and plot histogram of final balances
-# - Add vertical line at $30,000
-# - Compute mean, median, and P(final > $30,000)
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib.ticker import FuncFormatter
+
+def run_simulations(
+    num_simulations: int, 
+    num_years: int, 
+    initial_balance: float, 
+    heads_multiplier: float, 
+    tails_multiplier: float
+) -> np.ndarray:
+    """
+    Runs vectorized simulations and returns the full history of balances.
+
+    Returns:
+        A 2D numpy array of shape (num_simulations, num_years + 1)
+        containing the balance for each year of each simulation.
+    """
+    # Generate all coin flips at once. Shape: (num_simulations, num_years)
+    outcomes = np.random.choice([heads_multiplier, tails_multiplier], 
+                                size=(num_simulations, num_years), 
+                                p=[0.5, 0.5])
+    
+    # Calculate cumulative multipliers over the years
+    cumulative_multipliers = np.cumprod(outcomes, axis=1)
+    
+    # Prepend a column of ones for the initial balance multiplier
+    full_multipliers = np.insert(cumulative_multipliers, 0, 1, axis=1)
+    
+    return initial_balance * full_multipliers
+
+# --- Parameters ---
+INITIAL_BALANCE = 30000
+NUM_SIMULATIONS = 100
+NUM_YEARS = 75  # Age 25 to 75
+HEADS_MULT = 1.50
+TAILS_MULT = 0.60
+np.random.seed(42)  # for reproducibility
+
+# --- Run Simulations ---
+balance_history = run_simulations(
+    num_simulations=NUM_SIMULATIONS,
+    num_years=NUM_YEARS,
+    initial_balance=INITIAL_BALANCE,
+    heads_multiplier=HEADS_MULT,
+    tails_multiplier=TAILS_MULT
+)
+
+# --- Create a Tidy DataFrame with Simulation Number and Age ---
+sim_ids = np.arange(NUM_SIMULATIONS)
+years = np.arange(NUM_YEARS + 1)
+
+# Create a grid of simulation IDs and years
+sim_grid, year_grid = np.meshgrid(sim_ids, years, indexing='ij')
+
+df_simulations = pd.DataFrame({
+    'simulation_num': sim_grid.flatten(),
+    'year': year_grid.flatten(),
+    'balance': balance_history.flatten()
+})
+
+# Add age column (starting at 25)
+df_simulations['age'] = df_simulations['year'] + 25
+
+print("Tidy simulation data (first 10 rows):")
+# print(df_simulations.head(10))
+print("-" * 30)
+
+# --- Analysis and Visualization of FINAL balances ---
+df_final_balances = df_simulations[df_simulations['year'] == NUM_YEARS]
+
+fig, ax = plt.subplots(figsize=(9, 6))
+ax.hist(df_final_balances['balance'], bins=np.logspace(np.log10(1), np.log10(df_final_balances['balance'].max()), 30), edgecolor='black', alpha=0.7)
+ax.axvline(INITIAL_BALANCE, color='red', linestyle='--', linewidth=2, label=f'Initial Buy-in (${INITIAL_BALANCE:,.0f})')
+ax.set_xscale('log') # Use a logarithmic scale for the x-axis
+ax.set_title(f'Distribution of Final Balances After {NUM_YEARS} Years ({NUM_SIMULATIONS} Simulations)')
+ax.set_xlabel('Final Account Balance ($) - Log Scale')
+ax.set_ylabel('Frequency')
+
+# Format x-axis labels to be human-readable currency
+formatter = FuncFormatter(lambda x, p: f'${x:,.0f}')
+ax.xaxis.set_major_formatter(formatter)
+
+ax.legend()
+ax.grid(axis='y', linestyle='--', alpha=0.7)
+plt.show()
+
+# --- Compute and Print Key Statistics ---
+mean_balance = df_final_balances['balance'].mean()
+median_balance = df_final_balances['balance'].median()
+prob_profit = (df_final_balances['balance'] > INITIAL_BALANCE).mean()
+
+print(f"Mean final balance: ${mean_balance:,.2f}")
+print(f"Median final balance: ${median_balance:,.2f}")
+print(f"Probability of ending with more than the initial ${INITIAL_BALANCE:,.0f}: {prob_profit:.1%}")
 
 ```
 
@@ -182,4 +393,3 @@ What is the Kelly Criterion and how does it relate to the modified strategy?
 - Use object-oriented plotting with `matplotlib`
 - Keep figures readable and labeled; prefer professional styling
 - Commit early and often; render locally before pushing
-
