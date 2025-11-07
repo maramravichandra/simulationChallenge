@@ -414,7 +414,7 @@ ax.set_ylabel('Cumulative Probability')
 ax.xaxis.set_major_formatter(FuncFormatter(lambda x, p: f'${x:,.0f}'))
 ax.yaxis.set_major_formatter(FuncFormatter(lambda y, p: f'{y:.0%}'))
 ax.grid(True, which='both', linestyle='--', alpha=0.7)
-ax.legend(loc='lower right')
+ax.legend(loc='upper left')
 ```
 
 ### 5) Modified Strategy (Bet Exactly 50% Each Round)
