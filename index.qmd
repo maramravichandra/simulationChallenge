@@ -385,6 +385,8 @@ ax.ecdf(df_final_balances['balance'], label='CDF of Final Balances')
 
 # Add a vertical line for the initial investment threshold
 ax.axvline(INITIAL_BALANCE, color='red', linestyle='--', linewidth=2, label=f'Initial Investment (${INITIAL_BALANCE:,.0f})')
+# Add a horizontal line showing the probability of loss
+ax.axhline(prob_loss, color='red', linestyle=':', linewidth=1.5, xmax=0.55) # xmax stops the line partway
 
 # --- Annotations and Shading ---
 # Shade the area representing loss
@@ -395,18 +397,19 @@ ax.fill_between(df_final_balances['balance'].sort_values(), 0, 1, where=df_final
 ax.fill_between(df_final_balances['balance'].sort_values(), 0, 1, where=df_final_balances['balance'].sort_values() > INITIAL_BALANCE,
                 color='lightgreen', alpha=0.4, label='Profitable Outcomes')
 
-# --- Add Probability Text Directly on Shaded Areas ---
-ax.text(1000, 0.16, f'Losing Probability\n{prob_loss:.1%}', 
-        ha='center', va='center', fontsize=12, color='#A52A2A', fontweight='bold', bbox=dict(facecolor='white', alpha=0.5, boxstyle='round,pad=0.3'))
+# --- Add Annotations to Explain the Heights ---
+ax.annotate(f'Loss Threshold: {prob_loss:.1%}', xy=(INITIAL_BALANCE, prob_loss), xytext=(INITIAL_BALANCE * 0.05, prob_loss + 0.05),
+            arrowprops=dict(facecolor='black', shrink=0.05, width=1, headwidth=8),
+            fontsize=10, fontweight='bold', ha='center')
 
-ax.text(500000, 0.66, f'Estimated Profit\nProbability\n{prob_profit:.1%}', 
-        ha='center', va='center', fontsize=12, color='#006400', fontweight='bold', bbox=dict(facecolor='white', alpha=0.5, boxstyle='round,pad=0.3'))
+ax.annotate('68% Profit Zone', xy=(1e6, 0.65), xytext=(1e6, 0.65), ha='center', va='center', fontsize=12, color='#006400', fontweight='bold')
+ax.annotate('32% Loss Zone', xy=(1e3, 0.15), xytext=(1e3, 0.15), ha='center', va='center', fontsize=12, color='#A52A2A', fontweight='bold')
 
 
 # Formatting
 ax.set_xscale('log')
 ax.set_title(f'Cumulative Probability of Final Balances After {NUM_YEARS} Years', fontsize=16, pad=20)
-ax.set_xlabel('Final Account Balance ($) - Log Scale')
+ax.set_xlabel('Final Account Balance ($)')
 ax.set_ylabel('Cumulative Probability')
 ax.xaxis.set_major_formatter(FuncFormatter(lambda x, p: f'${x:,.0f}'))
 ax.yaxis.set_major_formatter(FuncFormatter(lambda y, p: f'{y:.0%}'))
