@@ -85,9 +85,6 @@ investmentDAG.show()
 
 ### 1) Expected Value After 1 Flip
 
-**Explain whether the expected value of your account balance after one flip is >, =, or < $30,000. What is the gain in expected value as a percentage of your buy-in? Does this simple analysis suggest you should buy-in to the game?**
-
-
 The expected value (EV) of the account balance after one flip is **greater than** the initial $30,000 investment. We can calculate this by taking the weighted average of the two possible outcomes:
 
 1.  **Heads (50% chance):** Balance becomes $30,000 * 1.50 = $45,000.
@@ -183,7 +180,11 @@ ax.grid(axis='y', linestyle=':', color='grey')
 
 ### 2) Single Simulation Over Time (Narrative + Plot)
 
-**Briefly narrate and visualize what happens to your account balance over the course of one run. Are you happy with the outcome? Why? or Why not?  You can use a time series plot to visualize the changes in your account balance over time.**
+This time series plot tracks the journey of the initial $30,000 investment over 50 years for one specific, randomly generated sequence of coin flips. The y-axis is on a logarithmic scale to better visualize the dramatic percentage changes in wealth.
+
+In this particular run, the outcome is disastrous. After an initial period of growth, a string of bad luck sends the balance plummeting. The final balance is nearly zero, representing a near-total loss of the initial investment.
+
+**Why This Matters:** This single, harrowing simulation provides a crucial reality check. While the expected value analysis in Section 1 was optimistic, this plot demonstrates the immense **volatility and risk** of the game. It shows that a positive average return doesn't protect you from a terrible outcome. This single path highlights the danger of "path dependency"—where an unlucky streak can wipe you out, making recovery impossible. It serves as a powerful cautionary tale and motivates the need to analyze a much wider range of possible futures, which we will do in the next section.
 
 ```{python}
 #| label: q2-single-sim-py
@@ -228,7 +229,16 @@ ax.legend()
 
 ### 3) 100 Simulations: Distribution of Final Balances
 
-**Visually and narratively describe the distribution of your account balance after running the 100 simulations. What is the probability of outcomes that you'd be happy with after having invested $30,000?**
+This section moves beyond a single to total run to show the full spectrum of possibilities. By simulating the game 100 times, we can analyze the distribution of final balances and understand the investment's true risk profile.
+
+**Visual Analysis:**
+The histogram reveals a highly **right-skewed distribution**. This means that while most simulations result in modest outcomes (the cluster of bars on the left), a small number of simulations lead to extremely large wins (the long tail stretching to the right).
+
+-   **Median vs. Mean:** The **median** (orange line), or typical outcome, is significantly lower than the **mean** (green line). This is a classic sign of a skewed distribution, where the average is pulled up by a few outlier jackpots. The median gives a more realistic expectation for any single run.
+-   **Risk of Loss:** A noticeable portion of the distribution falls below the initial $30,000 investment (red line), highlighting the real risk of losing money over the long term.
+
+**Probability of a "Happy" Outcome:**
+Assuming a "happy" outcome is any result where the final balance is greater than the initial $30,000 investment, the probability is **68.0%**. This means that in roughly two-thirds of the simulations, the investor ended with a profit. While these are favorable odds, the wide distribution shows that the magnitude of that profit is highly uncertain.
 
 ```{python}
 #| label: q3-dist-100-py
@@ -351,62 +361,60 @@ The estimated probability is **68.0%**.
 
 **Practical Meaning:** This figure suggests that if 100 people played this game, we would expect about 68 of them to walk away with more money than they started with. For a single investor, it represents a roughly 2-in-3 chance of turning a profit over their 50-year investment lifetime. While not a guarantee, these are favorable odds that make a strong case for playing the game, assuming the investor can tolerate the risk of being in the unlucky 32%.
 
+**How to Read the Plot:** The plot below is a Cumulative Distribution Function (CDF), which directly visualizes these probabilities. The y-axis shows the cumulative probability.
+- The blue curve shows the running total of outcomes. To find the probability of losing, find the **$30,000** mark on the x-axis (the red line). The height of the curve at this point is **32%**. This means 32% of all simulations ended with a loss.
+- The **red shaded area** visualizes this 32% cumulative probability of loss.
+- Since the total probability is 100%, the remaining portion must be the probability of profit: `100% - 32% = 68%`. The **green shaded area** visualizes this remaining 68% of outcomes.
+
 ```{python}
 #| label: q4-prob-original-py
 #| echo: false
-#| fig-cap: "Distribution of final balances highlighting the probability of exceeding the initial investment"
+#| fig-cap: "Cumulative probability of final balances, showing the clear division between profitable and losing outcomes."
 
 # The df_final_balances DataFrame is available from the previous code block.
 
-# --- Calculate the probability ---
-mean_balance = df_final_balances['balance'].mean()
-median_balance = df_final_balances['balance'].median()
+# --- Calculate Probability ---
 prob_profit = (df_final_balances['balance'] > INITIAL_BALANCE).mean()
+prob_loss = 1 - prob_profit
 
 # --- Visualization ---
 fig, ax = plt.subplots(figsize=(9, 7))
 
-# Create bins for the histogram, covering the full range of final balances
-bins = np.logspace(np.log10(df_final_balances['balance'].min()), np.log10(df_final_balances['balance'].max()), 40)
+# Plot the Cumulative Distribution Function (CDF)
+ax.ecdf(df_final_balances['balance'], label='CDF of Final Balances')
 
-# Plot histogram for all final balances (grey)
-ax.hist(df_final_balances['balance'], bins=bins, edgecolor='black', alpha=0.5, color='lightgrey', label='Losing Outcomes')
-
-# Highlight the profitable outcomes (blue)
-ax.hist(df_final_balances[df_final_balances['balance'] > INITIAL_BALANCE]['balance'],
-        bins=bins, edgecolor='black', alpha=0.8, color='#228B22', label='Profitable Outcomes') # ForestGreen
-
-# Add a vertical line for the initial balance threshold
+# Add a vertical line for the initial investment threshold
 ax.axvline(INITIAL_BALANCE, color='red', linestyle='--', linewidth=2, label=f'Initial Investment (${INITIAL_BALANCE:,.0f})')
-ax.axvline(mean_balance, color='navy', linestyle=':', linewidth=2.5, label=f'Mean Final Balance (${mean_balance:,.0f})')
-ax.axvline(median_balance, color='darkorange', linestyle=':', linewidth=2.5, label=f'Median Final Balance (${median_balance:,.0f})')
+
+# --- Annotations and Shading ---
+# Shade the area representing loss
+ax.fill_between(df_final_balances['balance'].sort_values(), 0, 1, where=df_final_balances['balance'].sort_values() <= INITIAL_BALANCE,
+                color='lightcoral', alpha=0.3, label='Losing Outcomes')
+
+# Shade the area representing profit
+ax.fill_between(df_final_balances['balance'].sort_values(), 0, 1, where=df_final_balances['balance'].sort_values() > INITIAL_BALANCE,
+                color='lightgreen', alpha=0.4, label='Profitable Outcomes')
+
+# --- Add Probability Text Directly on Shaded Areas ---
+ax.text(1000, 0.16, f'Losing Probability\n{prob_loss:.1%}', 
+        ha='center', va='center', fontsize=12, color='#A52A2A', fontweight='bold', bbox=dict(facecolor='white', alpha=0.5, boxstyle='round,pad=0.3'))
+
+ax.text(500000, 0.66, f'Estimated Profit\nProbability\n{prob_profit:.1%}', 
+        ha='center', va='center', fontsize=12, color='#006400', fontweight='bold', bbox=dict(facecolor='white', alpha=0.5, boxstyle='round,pad=0.3'))
+
 
 # Formatting
-ax.set_xscale('log') # Use logarithmic scale for better distribution visibility
-ax.set_title(f'Distribution of Final Balances After {NUM_YEARS} Years ({NUM_SIMULATIONS} Simulations)', fontsize=16, pad=20)
-ax.set_xlabel('Final Account Balance ($)')
-ax.set_ylabel('Frequency of Simulations')
-ax.yaxis.set_major_formatter(FuncFormatter(lambda x, p: f'{int(x)}')) # For frequency, integer is fine
-ax.xaxis.set_major_formatter(FuncFormatter(lambda x, p: f'${x:,.0f}')) # Currency format for x-axis
-ax.grid(axis='y', linestyle='--', alpha=0.7)
-
-# Adjust legend
-handles, labels = ax.get_legend_handles_labels()
-order = [2, 3, 4, 1, 0] # Reorder legend items for better storytelling
-ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order], loc='upper left')
-
-# Add probability text annotation directly on the plot
-ax.text(0.96, 0.95, f'P(Profit) = {prob_profit:.1%}',transform=ax.transAxes, fontsize=10,
-        verticalalignment='top', horizontalalignment='right', bbox=dict(boxstyle='round,pad=0.5', fc='wheat', alpha=0.5))
-
-
-# --- Print numeric result ---
-# print(f"The estimated probability of ending with more than the initial ${INITIAL_BALANCE:,.0f} after {NUM_YEARS} years is: {prob_profit:.3f}")
+ax.set_xscale('log')
+ax.set_title(f'Cumulative Probability of Final Balances After {NUM_YEARS} Years', fontsize=16, pad=20)
+ax.set_xlabel('Final Account Balance ($) - Log Scale')
+ax.set_ylabel('Cumulative Probability')
+ax.xaxis.set_major_formatter(FuncFormatter(lambda x, p: f'${x:,.0f}'))
+ax.yaxis.set_major_formatter(FuncFormatter(lambda y, p: f'{y:.0%}'))
+ax.grid(True, which='both', linestyle='--', alpha=0.7)
+ax.legend(loc='lower right')
 ```
 
 ### 5) Modified Strategy (Bet Exactly 50% Each Round)
-
-**Instead of having the full balance at risk with each coin flip, assume only 25% of your balance is gambled each year. Compare this to the original game. Which is riskier? Which has better upside?**
 
 This modified strategy introduces a crucial element of risk management. By only gambling a fraction of the balance, we protect a significant portion of our capital from downturns. The visualization below directly compares the distribution of final balances from this new strategy against the original, all-in strategy.
 
@@ -450,8 +458,8 @@ max_bal = max(df_final_balances['balance'].max(), df_mod_final_balances['balance
 bins = np.logspace(np.log10(min_bal), np.log10(max_bal), 50)
 
 # Plot histograms for both strategies
-ax.hist(df_final_balances['balance'], bins=bins, alpha=0.6, label=f'Original Strategy (P(Profit)={prob_profit:.1%})', color='lightcoral')
-ax.hist(df_mod_final_balances['balance'], bins=bins, alpha=0.7, label=f'Modified Strategy (P(Profit)={mod_prob_profit:.1%})', color='steelblue')
+ax.hist(df_final_balances['balance'], bins=bins, alpha=0.6, label=f'Original Strategy (P(Profit) = {prob_profit:.1%})', color='lightcoral')
+ax.hist(df_mod_final_balances['balance'], bins=bins, alpha=0.7, label=f'Modified Strategy (P(Profit) = {mod_prob_profit:.1%})', color='steelblue')
 
 # Add a vertical line for the initial balance threshold
 ax.axvline(INITIAL_BALANCE, color='black', linestyle='--', linewidth=2, label=f'Initial Investment (${INITIAL_BALANCE:,.0f})')

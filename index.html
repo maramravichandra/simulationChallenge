@@ -148,7 +148,6 @@ Figure&nbsp;1: Generative DAG model for the investment game showing how wealth e
 </div>
 <section id="expected-value-after-1-flip" class="level3">
 <h3 class="anchored" data-anchor-id="expected-value-after-1-flip">1) Expected Value After 1 Flip</h3>
-<p><strong>Explain whether the expected value of your account balance after one flip is &gt;, =, or &lt; $30,000. What is the gain in expected value as a percentage of your buy-in? Does this simple analysis suggest you should buy-in to the game?</strong></p>
 <p>The expected value (EV) of the account balance after one flip is <strong>greater than</strong> the initial $30,000 investment. We can calculate this by taking the weighted average of the two possible outcomes:</p>
 <ol type="1">
 <li><strong>Heads (50% chance):</strong> Balance becomes $30,000 * 1.50 = $45,000.</li>
@@ -169,7 +168,9 @@ Figure&nbsp;1: Generative DAG model for the investment game showing how wealth e
 </section>
 <section id="single-simulation-over-time-narrative-plot" class="level3">
 <h3 class="anchored" data-anchor-id="single-simulation-over-time-narrative-plot">2) Single Simulation Over Time (Narrative + Plot)</h3>
-<p><strong>Briefly narrate and visualize what happens to your account balance over the course of one run. Are you happy with the outcome? Why? or Why not? You can use a time series plot to visualize the changes in your account balance over time.</strong></p>
+<p>This time series plot tracks the journey of the initial $30,000 investment over 50 years for one specific, randomly generated sequence of coin flips. The y-axis is on a logarithmic scale to better visualize the dramatic percentage changes in wealth.</p>
+<p>In this particular run, the outcome is disastrous. After an initial period of growth, a string of bad luck sends the balance plummeting. The final balance is nearly zero, representing a near-total loss of the initial investment.</p>
+<p><strong>Why This Matters:</strong> This single, harrowing simulation provides a crucial reality check. While the expected value analysis in Section 1 was optimistic, this plot demonstrates the immense <strong>volatility and risk</strong> of the game. It shows that a positive average return doesn’t protect you from a terrible outcome. This single path highlights the danger of “path dependency”—where an unlucky streak can wipe you out, making recovery impossible. It serves as a powerful cautionary tale and motivates the need to analyze a much wider range of possible futures, which we will do in the next section.</p>
 <div id="cell-q2-single-sim-py" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display">
 <div id="q2-single-sim-py" class="quarto-figure quarto-figure-center anchored">
@@ -183,7 +184,13 @@ Figure&nbsp;1: Generative DAG model for the investment game showing how wealth e
 </section>
 <section id="simulations-distribution-of-final-balances" class="level3">
 <h3 class="anchored" data-anchor-id="simulations-distribution-of-final-balances">3) 100 Simulations: Distribution of Final Balances</h3>
-<p><strong>Visually and narratively describe the distribution of your account balance after running the 100 simulations. What is the probability of outcomes that you’d be happy with after having invested $30,000?</strong></p>
+<p>This section moves beyond a single to total run to show the full spectrum of possibilities. By simulating the game 100 times, we can analyze the distribution of final balances and understand the investment’s true risk profile.</p>
+<p><strong>Visual Analysis:</strong> The histogram reveals a highly <strong>right-skewed distribution</strong>. This means that while most simulations result in modest outcomes (the cluster of bars on the left), a small number of simulations lead to extremely large wins (the long tail stretching to the right).</p>
+<ul>
+<li><strong>Median vs.&nbsp;Mean:</strong> The <strong>median</strong> (orange line), or typical outcome, is significantly lower than the <strong>mean</strong> (green line). This is a classic sign of a skewed distribution, where the average is pulled up by a few outlier jackpots. The median gives a more realistic expectation for any single run.</li>
+<li><strong>Risk of Loss:</strong> A noticeable portion of the distribution falls below the initial $30,000 investment (red line), highlighting the real risk of losing money over the long term.</li>
+</ul>
+<p><strong>Probability of a “Happy” Outcome:</strong> Assuming a “happy” outcome is any result where the final balance is greater than the initial $30,000 investment, the probability is <strong>68.0%</strong>. This means that in roughly two-thirds of the simulations, the investor ended with a profit. While these are favorable odds, the wide distribution shows that the magnitude of that profit is highly uncertain.</p>
 <div id="cell-q3-dist-100-py" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <div id="q3-dist-100-py" class="quarto-figure quarto-figure-center anchored">
@@ -202,15 +209,13 @@ Figure&nbsp;1: Generative DAG model for the investment game showing how wealth e
 <p>From our 100 simulations, we observe that a significant portion of the outcomes result in a balance greater than the initial $30,000. This suggests that, despite the volatility and the risk of near-total loss in some scenarios, the positive expected value per flip (as seen in Section 1) can lead to favorable long-term outcomes for a substantial number of paths.</p>
 <p>The estimated probability is <strong>68.0%</strong>.</p>
 <p><strong>Practical Meaning:</strong> This figure suggests that if 100 people played this game, we would expect about 68 of them to walk away with more money than they started with. For a single investor, it represents a roughly 2-in-3 chance of turning a profit over their 50-year investment lifetime. While not a guarantee, these are favorable odds that make a strong case for playing the game, assuming the investor can tolerate the risk of being in the unlucky 32%.</p>
-<div id="q4-prob-original-py" class="cell" data-execution_count="6">
-<div id="q4-prob-original-py-1" class="cell-output cell-output-display" data-execution_count="161">
-<pre><code>Text(0.96, 0.95, 'P(Profit) = 19.0%')</code></pre>
-<p>Distribution of final balances highlighting the probability of exceeding the initial investment</p>
-</div>
+<p><strong>How to Read the Plot:</strong> The plot below is a Cumulative Distribution Function (CDF), which directly visualizes these probabilities. The y-axis shows the cumulative probability. - The blue curve shows the running total of outcomes. To find the probability of losing, find the <strong>$30,000</strong> mark on the x-axis (the red line). The height of the curve at this point is <strong>32%</strong>. This means 32% of all simulations ended with a loss. - The <strong>red shaded area</strong> visualizes this 32% cumulative probability of loss. - Since the total probability is 100%, the remaining portion must be the probability of profit: <code>100% - 32% = 68%</code>. The <strong>green shaded area</strong> visualizes this remaining 68% of outcomes.</p>
+<div id="cell-q4-prob-original-py" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
-<div>
+<div id="q4-prob-original-py" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
-<p><img src="index_files/figure-html/q4-prob-original-py-output-2.png" id="q4-prob-original-py-2" width="733" height="620" class="figure-img"></p>
+<p><img src="index_files/figure-html/q4-prob-original-py-output-1.png" width="754" height="620" class="figure-img"></p>
+<figcaption>Cumulative probability of final balances, showing the clear division between profitable and losing outcomes.</figcaption>
 </figure>
 </div>
 </div>
@@ -218,7 +223,6 @@ Figure&nbsp;1: Generative DAG model for the investment game showing how wealth e
 </section>
 <section id="modified-strategy-bet-exactly-50-each-round" class="level3">
 <h3 class="anchored" data-anchor-id="modified-strategy-bet-exactly-50-each-round">5) Modified Strategy (Bet Exactly 50% Each Round)</h3>
-<p><strong>Instead of having the full balance at risk with each coin flip, assume only 25% of your balance is gambled each year. Compare this to the original game. Which is riskier? Which has better upside?</strong></p>
 <p>This modified strategy introduces a crucial element of risk management. By only gambling a fraction of the balance, we protect a significant portion of our capital from downturns. The visualization below directly compares the distribution of final balances from this new strategy against the original, all-in strategy.</p>
 <p><strong>Which is riskier?</strong> The modified strategy is significantly <strong>less risky</strong>. The worst-case outcomes are dramatically improved, with the minimum final balance being much higher than in the original game. The entire distribution is narrower and less spread out, indicating lower volatility and a smaller chance of catastrophic loss.</p>
 <p><strong>Which has better upside?</strong> The original, all-in strategy has a <strong>better upside</strong>. Its right tail extends much further, meaning the potential for astronomical gains is higher. However, this comes at the cost of higher risk. The modified strategy, while safer, has a lower ceiling on its maximum potential return.</p>
